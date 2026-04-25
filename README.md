@@ -1,5 +1,10 @@
 # LedgerPay
 
+[![ci](https://github.com/sarthakj1904/ledgerpay/actions/workflows/ci.yml/badge.svg)](https://github.com/sarthakj1904/ledgerpay/actions/workflows/ci.yml)
+[![java](https://img.shields.io/badge/java-21-orange)](https://adoptium.net/temurin/releases/?version=21)
+[![spring-boot](https://img.shields.io/badge/spring--boot-3.3-brightgreen)](https://spring.io/projects/spring-boot)
+[![license](https://img.shields.io/badge/license-MIT-blue)](#license)
+
 A production-grade payment-infrastructure backend built as a hybrid **modular monolith + extracted services**, inspired by Stripe/Razorpay/PayPal. Implements a correct double-entry ledger, idempotent APIs, transactional outbox + Kafka, fraud detection, and end-to-end observability.
 
 - **Stack:** Java 21, Spring Boot 3, Spring Security (JWT), Spring Data JPA, PostgreSQL 16, Apache Kafka, Redis (fraud service), Docker, Prometheus, Grafana.
