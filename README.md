@@ -46,28 +46,31 @@ The k6 run that produced the metrics above:
 
 ```mermaid
 flowchart LR
-    Client[Client]
+    Client(["Client"])
 
-    subgraph monolith [Monolith]
+    subgraph monolith ["LedgerPay monolith"]
       direction TB
-      Auth[auth]
-      Wallet[wallet]
-      Ledger[ledger engine]
-      Payment["payment + idempotency filter"]
-      Audit[audit consumer]
-      Outbox[(outbox table)]
+      Modules["auth · wallet · ledger<br/>payment + idempotency filter<br/>audit consumer"]
+      Outbox[("outbox table")]
+      Modules -.-> Outbox
     end
 
-    Client -->|REST + JWT| monolith
-    monolith <-->|JDBC| Postgres[(Postgres)]
-    Outbox -->|poll + publish| Kafka[(Kafka)]
-    Kafka --> Notif["notification-service<br/>email + merchant webhook"]
-    Kafka --> Fraud["fraud-service<br/>velocity / amount / failure"]
-    Fraud -->|FRAUD_ALERT| Kafka
-    Kafka --> Audit
-    Fraud <-->|counters| Redis[(Redis)]
-    monolith -->|/actuator/prometheus| Prom[(Prometheus)]
-    Prom --> Grafana
+    Notif["notification-service<br/>email + merchant webhooks"]
+    Fraud["fraud-service<br/>velocity / amount / failure rules"]
+
+    subgraph obs ["Observability"]
+      direction LR
+      Prom[("Prometheus")] --> Grafana(["Grafana"])
+    end
+
+    Client -->|"REST + JWT"| monolith
+    monolith <-->|JDBC| Postgres[("Postgres")]
+    monolith -.->|metrics| obs
+    Outbox -->|"poll + publish"| Kafka[("Kafka")]
+    Kafka -->|payment.events| Notif
+    Kafka -->|payment.events| Fraud
+    Fraud -->|fraud.events| Kafka
+    Fraud <-->|counters| Redis[("Redis")]
 ```
 
 ### Key design decisions
