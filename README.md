@@ -24,6 +24,24 @@ LedgerPay is a reference implementation of these guarantees under realistic fail
 
 ---
 
+## What it looks like running
+
+End-to-end metrics during a 60-second k6 hot-spot load test (20 VUs hammering a single
+contended sink wallet — see [the load test script](scripts/load/transfer.js)):
+
+![Grafana — payment rate, p95 latency, outbox depth, fraud-rule firings](docs/screenshots/grafana-dashboard.png)
+
+Every payment emits a fully-formed envelope onto Kafka via the transactional outbox. Browsing
+`payment.events` in Kafka UI shows them landing in real time:
+
+![Kafka UI — payment.events topic with the event stream](docs/screenshots/kafka-ui-payment-events.png)
+
+The k6 run that produced the metrics above:
+
+![k6 — 14,669 successful transfers, p95=135ms, all thresholds passed](docs/screenshots/k6-load-test.png)
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -244,12 +262,13 @@ shared sink wallet. This pegs the sink wallet's `@Version` optimistic lock and e
 
 | Metric | Value |
 |---|---:|
-| Sustained successful transfers | **194 / sec** |
-| Total HTTP throughput | 198 req/sec |
-| Transfer p50 | 9 ms |
-| Transfer p95 | 185 ms |
-| Successful transfers in 30 s | 6,320 |
-| Error rate (after retry exhaustion) | 1.14 % |
+| Sustained successful transfers | **236 / sec** |
+| Total HTTP throughput | 238 req/sec |
+| Transfer p50 | 5 ms |
+| Transfer p95 | 135 ms |
+| Transfer p99 | 421 ms |
+| Successful transfers in 60 s | 14,669 |
+| Error rate (after retry exhaustion) | 0.50 % |
 
 Reproduction:
 
