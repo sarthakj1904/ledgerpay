@@ -58,7 +58,7 @@ flowchart LR
       Outbox[(outbox table)]
     end
 
-    Client -->|REST + JWT| Auth
+    Client -->|REST + JWT| monolith
     monolith <-->|JDBC| Postgres[(Postgres)]
     Outbox -->|poll + publish| Kafka[(Kafka)]
     Kafka --> Notif["notification-service<br/>email + merchant webhook"]
