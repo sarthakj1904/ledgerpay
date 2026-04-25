@@ -46,23 +46,27 @@ The k6 run that produced the metrics above:
 
 ```mermaid
 flowchart LR
-    Client[Client] -->|REST + JWT| Monolith
-    subgraph Monolith
+    Client[Client]
+
+    subgraph monolith [Monolith]
+      direction TB
       Auth[auth]
       Wallet[wallet]
       Ledger[ledger engine]
-      Payment[payment + idempotency filter]
+      Payment["payment + idempotency filter"]
       Audit[audit consumer]
       Outbox[(outbox table)]
     end
-    Monolith <-->|JDBC| Postgres[(Postgres)]
-    Monolith -->|publish| Kafka[(Kafka)]
-    Kafka --> Notif[notification-service<br/>mock email + merchant webhook]
-    Kafka --> Fraud[fraud-service<br/>velocity / amount / failure rules]
-    Fraud -->|fraud.events FRAUD_ALERT| Kafka
+
+    Client -->|REST + JWT| Auth
+    monolith <-->|JDBC| Postgres[(Postgres)]
+    Outbox -->|poll + publish| Kafka[(Kafka)]
+    Kafka --> Notif["notification-service<br/>email + merchant webhook"]
+    Kafka --> Fraud["fraud-service<br/>velocity / amount / failure"]
+    Fraud -->|FRAUD_ALERT| Kafka
     Kafka --> Audit
-    Fraud <-->|velocity counters| Redis[(Redis)]
-    Monolith -->|/actuator/prometheus| Prom[(Prometheus)]
+    Fraud <-->|counters| Redis[(Redis)]
+    monolith -->|/actuator/prometheus| Prom[(Prometheus)]
     Prom --> Grafana
 ```
 
