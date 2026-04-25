@@ -1,0 +1,14 @@
+target/
+*.class
+*.iml
+.idea/
+.vscode/
+.DS_Store
+*.log
+build/
+.gradle/
+out/
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+dependency-reduced-pom.xml
+HELP.md

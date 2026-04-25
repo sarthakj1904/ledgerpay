@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: ledgerpay-fraud-service
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    consumer:
+      group-id: ledgerpay-fraud
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    producer:
+      acks: all
+    listener:
+      ack-mode: manual
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+server:
+  port: 8082
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+ledgerpay:
+  topics:
+    payment-events: payment.events
+    fraud-events: fraud.events
+  fraud:
+    velocity:
+      window-seconds: 60
+      threshold: 5
+    amount-spike:
+      multiplier: 10
+      min-baseline-minor: 10000      # below 100.00 baseline the rule does not fire
+    failure-burst:
+      window-seconds: 300
+      threshold: 3
+    ip-blocklist: []
+
+logging:
+  level:
+    root: INFO
+    com.ledgerpay: DEBUG

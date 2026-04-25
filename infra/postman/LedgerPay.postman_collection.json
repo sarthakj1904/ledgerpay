@@ -1,0 +1,187 @@
+{
+  "info": {
+    "name": "LedgerPay",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "End-to-end collection for LedgerPay: register, login, wallet, payments, transactions. Chain requests via the `token`, `userWallet`, `merchantId` collection variables that get populated automatically."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "userWallet", "value": "" },
+    { "key": "merchantWallet", "value": "" },
+    { "key": "merchantId", "value": "" },
+    { "key": "lastTxnId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 Register user",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user-{{$guid}}@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"USER\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('token', body.accessToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"<fill email from step 1>\",\n  \"password\": \"password123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "03 Create wallet",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/v1/wallets",
+        "body": { "mode": "raw", "raw": "{\"currency\":\"INR\"}" }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('userWallet', body.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Add money",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Idempotency-Key", "value": "idem-{{$guid}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/v1/payments/add-money",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"walletId\": \"{{userWallet}}\",\n  \"amountMinor\": 100000,\n  \"currency\": \"INR\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('lastTxnId', body.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Get balance",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/v1/wallets/{{userWallet}}/balance"
+      }
+    },
+    {
+      "name": "06 Register merchant",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"merchant-{{$guid}}@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"MERCHANT\",\n  \"businessName\": \"Acme Coffee\"\n}"
+        }
+      }
+    },
+    {
+      "name": "07 Transfer",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Idempotency-Key", "value": "idem-{{$guid}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/v1/payments/transfer",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fromWalletId\": \"{{userWallet}}\",\n  \"toWalletId\": \"<receiver wallet id>\",\n  \"amountMinor\": 25000\n}"
+        }
+      }
+    },
+    {
+      "name": "08 Merchant pay",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Idempotency-Key", "value": "idem-{{$guid}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/v1/payments/merchant-pay",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fromWalletId\": \"{{userWallet}}\",\n  \"merchantId\": \"{{merchantId}}\",\n  \"amountMinor\": 15000\n}"
+        }
+      }
+    },
+    {
+      "name": "09 Refund",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Idempotency-Key", "value": "idem-{{$guid}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/v1/payments/refund",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transactionId\": \"{{lastTxnId}}\",\n  \"amountMinor\": 5000\n}"
+        }
+      }
+    },
+    {
+      "name": "10 Get transaction",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/v1/transactions/{{lastTxnId}}"
+      }
+    },
+    {
+      "name": "11 List transactions for wallet",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/v1/transactions?walletId={{userWallet}}&page=0&size=20"
+      }
+    }
+  ]
+}

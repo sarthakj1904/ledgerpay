@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: ledgerpay-notification-service
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    consumer:
+      group-id: ledgerpay-notification
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    listener:
+      ack-mode: manual
+
+server:
+  port: 8081
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+ledgerpay:
+  topics:
+    payment-events: payment.events
+  notification:
+    webhook:
+      connect-timeout-ms: 2000
+      read-timeout-ms: 5000
+      max-attempts: 4
+
+logging:
+  level:
+    root: INFO
+    com.ledgerpay: DEBUG

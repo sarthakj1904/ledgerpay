@@ -1,0 +1,17 @@
+spring:
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+
+ledgerpay:
+  system:
+    suspense-wallet-id: 00000000-0000-0000-0000-000000000001
+  topics:
+    payment-events: payment.events
+    wallet-events: wallet.events
+    fraud-events: fraud.events
+
+logging:
+  level:
+    root: WARN
+    com.ledgerpay: INFO

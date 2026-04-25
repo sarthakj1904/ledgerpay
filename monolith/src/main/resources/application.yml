@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: ledgerpay-monolith
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ledgerpay}
+    username: ${SPRING_DATASOURCE_USERNAME:ledgerpay}
+    password: ${SPRING_DATASOURCE_PASSWORD:ledgerpay}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        retries: 2147483647
+    consumer:
+      group-id: ledgerpay-monolith
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "com.ledgerpay.*"
+    listener:
+      ack-mode: manual
+
+server:
+  port: 8080
+  shutdown: graceful
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    distribution:
+      percentiles-histogram:
+        ledgerpay.payment.latency: true
+      percentiles:
+        ledgerpay.payment.latency: 0.5, 0.95, 0.99
+
+ledgerpay:
+  jwt:
+    secret: ${LEDGERPAY_JWT_SECRET:dev-secret-please-change-this-dev-secret-32bytes}
+    ttl-minutes: 60
+    issuer: ledgerpay
+  idempotency:
+    ttl-hours: 24
+  outbox:
+    poll-batch-size: 100
+    max-retries: 5
+  system:
+    suspense-wallet-id: 00000000-0000-0000-0000-000000000001
+  topics:
+    payment-events: payment.events
+    wallet-events: wallet.events
+    fraud-events: fraud.events
+
+logging:
+  level:
+    root: INFO
+    com.ledgerpay: DEBUG
+    org.springframework.kafka: WARN
+    org.hibernate.SQL: WARN

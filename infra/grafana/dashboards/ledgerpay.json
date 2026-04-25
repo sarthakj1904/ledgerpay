@@ -1,0 +1,60 @@
+{
+  "title": "LedgerPay Overview",
+  "uid": "ledgerpay-overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": {"from": "now-15m", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Payments per second by status",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "sum(rate(ledgerpay_payment_total[1m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Payment latency p95 (seconds)",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ledgerpay_payment_latency_seconds_bucket[1m])) by (le, type))",
+          "legendFormat": "{{type}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Outbox pending",
+      "gridPos": {"x": 0, "y": 8, "w": 6, "h": 4},
+      "targets": [{"expr": "ledgerpay_outbox_pending"}]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Fraud flags (total)",
+      "gridPos": {"x": 6, "y": 8, "w": 6, "h": 4},
+      "targets": [{"expr": "sum(ledgerpay_fraud_flags_total)"}]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Kafka consumer lag",
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "sum(kafka_consumer_fetch_manager_records_lag) by (client_id)",
+          "legendFormat": "{{client_id}}"
+        }
+      ]
+    }
+  ]
+}
